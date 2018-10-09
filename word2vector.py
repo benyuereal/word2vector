@@ -1,4 +1,10 @@
+from collections import Counter
+from operator import itemgetter as _itemgetter
+
 import numpy as np
+import file_interface
+import jieba
+
 
 
 class word2vector():
@@ -113,6 +119,8 @@ class huffman_tree():
         self.build_huffman_root(node_list)
         # 组装一个哈夫曼树形结构
         self.build_huffman_tree(node_list)
+        # 产生哈夫曼编码
+        self.generate_huffman_code(self.root, word_dictionary)
 
     # 组装一个哈夫曼树根
     def build_huffman_root(self,
@@ -192,3 +200,91 @@ class huffman_tree():
             root.left = node2
             root.right = node1
         return root
+
+
+# 词频统计类 主要功能有 切分词、统计词频
+class word_count():
+
+    def __init__(self, text_list):
+        self.text_list = text_list
+        stop_word = self.stop_word();
+        self.stop_word = stop_word
+        self.count_result = None
+        # 进行词频统计
+        self.word_count(self.text_list)
+
+    def stop_word(self):
+        stop_words = file_interface.load_pickle('./static/stop_words.pkl')
+        return stop_words
+    # 单词切分 去掉停用词
+    def word_count(self,text_list,cut_all=False):
+        # 过滤后的单词顺序表
+        filtered_word_list = []
+        count = 0
+        #
+        for line in text_list:
+            result = jieba.cut(line, cut_all=cut_all)
+            result = list(result)
+            text_list[count] = result
+            count += 1
+            filtered_word_list += result
+        # 这个属性需要留意一下 fixme
+        self.count_result = mul_counter(filtered_word_list)
+        # 过滤掉停用词
+        for word in self.stop_word:
+            try:
+                self.count_result.pop(word)
+            except:
+                pass
+
+# 进行词频统计的类
+class mul_counter(Counter):
+    def __init__(self,element_list):
+        super().__init__(element_list)
+
+        def larger_than(self, minvalue, ret='list'):
+            temp = sorted(self.items(), key=_itemgetter(1), reverse=True)
+            low = 0
+            high = temp.__len__()
+            while (high - low > 1):
+                mid = (low + high) >> 1
+                if temp[mid][1] >= minvalue:
+                    low = mid
+                else:
+                    high = mid
+            if temp[low][1] < minvalue:
+                if ret == 'dict':
+                    return {}
+                else:
+                    return []
+            if ret == 'dict':
+                ret_data = {}
+                for ele, count in temp[:high]:
+                    ret_data[ele] = count
+                return ret_data
+            else:
+                return temp[:high]
+
+        def less_than(self, maxvalue, ret='list'):
+            temp = sorted(self.items(), key=_itemgetter(1))
+            low = 0
+            high = temp.__len__()
+            while ((high - low) > 1):
+                mid = (low + high) >> 1
+                if temp[mid][1] <= maxvalue:
+                    low = mid
+                else:
+                    high = mid
+            if temp[low][1] > maxvalue:
+                if ret == 'dict':
+                    return {}
+                else:
+                    return []
+            if ret == 'dict':
+                ret_data = {}
+                for ele, count in temp[:high]:
+                    ret_data[ele] = count
+                return ret_data
+            else:
+                return temp[:high]
+

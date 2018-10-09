@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7fcdca39-c537-45d6-b94f-7673d2f54c3b" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/merge3sort.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/word2vector.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/file_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/word2vector.py" beforeDir="false" afterPath="$PROJECT_DIR$/word2vector.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -18,8 +18,20 @@
       <file leaf-file-name="word2vector.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/word2vector.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="206">
-              <caret line="167" column="29" selection-start-line="167" selection-start-column="20" selection-end-line="167" selection-end-column="29" />
+            <state relative-caret-position="152">
+              <caret line="218" column="16" selection-start-line="218" selection-start-column="16" selection-end-line="218" selection-end-column="16" />
+              <folding>
+                <element signature="e#0#31#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="file_interface.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/file_interface.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <caret column="21" selection-start-column="21" selection-end-column="21" />
             </state>
           </provider>
         </entry>
@@ -48,6 +60,7 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
+        <option value="$PROJECT_DIR$/file_Interface.py" />
         <option value="$PROJECT_DIR$/word2vector.py" />
       </list>
     </option>
@@ -62,8 +75,8 @@
     <packageJsonPaths />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="80" />
-    <option name="y" value="23" />
+    <option name="x" value="348" />
+    <option name="y" value="26" />
     <option name="width" value="1218" />
     <option name="height" value="686" />
   </component>
@@ -124,7 +137,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="243" y="23" width="1218" height="686" extended-state="0" />
+    <frame x="348" y="26" width="1218" height="686" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -134,7 +147,7 @@
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
       <window_info anchor="bottom" id="Terminal" order="7" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2585034" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.16241497" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="3" />
       <window_info anchor="right" id="SciView" order="3" />
@@ -161,6 +174,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2355">
           <caret line="157" column="28" lean-forward="true" selection-start-line="157" selection-start-column="28" selection-end-line="157" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -185,10 +201,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/file_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="21" selection-start-column="21" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/collections/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3495">
+          <caret line="465" column="6" selection-start-line="465" selection-start-column="6" selection-end-line="465" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/word2vector.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="167" column="29" selection-start-line="167" selection-start-column="20" selection-end-line="167" selection-end-column="29" />
+        <state relative-caret-position="152">
+          <caret line="218" column="16" selection-start-line="218" selection-start-column="16" selection-end-line="218" selection-end-column="16" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
