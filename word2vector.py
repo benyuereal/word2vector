@@ -2,9 +2,10 @@ from collections import Counter
 from operator import itemgetter as _itemgetter
 
 import numpy as np
+from sklearn import preprocessing
+
 import file_interface
 import jieba
-
 
 
 class word2vector():
@@ -25,12 +26,171 @@ class word2vector():
         self.window_length = window_length,
         # 这个是字典 字典里面存储的是该单词的哈夫曼编码、出现的频率、出现的频率
         self.word_dictionary = None,
-        # 默认哈夫曼编码是 ''
-        self.huffman = ''
+        # 哈夫曼树
+        self.huffman_tree = None
 
-    # 定义哈夫曼节点对象
+    # 构造训练模型
+    # fixme 大体思路:切分单词统计出词频（包括去掉部分单词）、训练模型、保存模型、进行预测
+    def train_model(self, text_list):
+        if self.huffman_tree == None:
+            if self.word_dictionary == None:
+                # 统计出词频
+                word_counts = word_count(text_list)
+                # 构造字典
+                self.generate_word_dictionary(word_counts.count_result.large_than(5))
+            # 产生一个全量的哈夫曼树
+            self.huffman_tree = huffman_tree(None, self.word_dictionary, vector_length=self.vector_length)
+        # 以上，最重要的数据环节 哈夫曼树、单词词频已经产生好了，接下来进行训练
+        print('word_dict and huffman tree already generated, ready to train vector')
+        # 设置待训练的单词在窗口中左右两边的单词长度,一般情况下窗口是奇数，比如 11 左边是5 右边也是5
+
+        left = (self.window_length - 1) >> 1
+        right = self.window_length - 1 - left
+
+        if self.cut_text_list:
+            # if the text has been cutted
+            total = self.cut_text_list.__len__()
+            count = 0
+            for line in self.cut_text_list:
+                line_len = line.__len__()
+                for i in range(line_len):
+                    self.deal_gram_CBOW(line[i], line[max(0, i - left):i] + line[i + 1:min(line_len, i + right + 1)])
+                count += 1
+                print('{c} of {d}'.format(c=count, d=total))
+
+        else:
+            # if the text has note been cutted
+            for line in text_list:
+                line = list(jieba.cut(line, cut_all=False))
+                line_len = line.__len__()
+                for i in range(line_len):
+                    # 相当于拿到目标单词左右两边 窗口大小的单词量，有时候刚开始的时候目标单词左边是只有一个或者没有单词的
+                    self.deal_gram_CBOW(line[i], line[max(0, i - left):i] + line[i + 1:min(line_len, i + right + 1)])
+        print('word vector has been generated')
+
+    def deal_gram_CBOW(self, word, gram_word_list):
+        # 如果单词不在字典表里面 那么肯定直接结束掉了
+        if not self.word_dictionary.__contains__(word):
+            return
+        # 当前这个单词的哈夫曼编码
+        huffman_code = self.word_dictionary[word]['huffman_code']
+        # 暂时不理解这个
+        gram_vector_sum = np.zeros([1, self.vector_length])
+        #  这个是python的slice notation的特殊用法。
+        #
+        # a = [0,1,2,3,4,5,6,7,8,9]
+        # b = a[i:j] 表示复制a[i]到a[j-1]，以生成新的list对象
+        # b = a[1:3] 那么，b的内容是 [1,2]
+        # 当i缺省时，默认为0，即 a[:3]相当于 a[0:3]
+        # 当j缺省时，默认为len(alist), 即a[1:]相当于a[1:10]
+        # 当i,j都缺省时，a[:]就相当于完整复制一份a了
+        #
+        # b = a[i:j:s]这种格式呢，i,j与上面的一样，但s表示步进，缺省为1.
+        # 所以a[i:j:1]相当于a[i:j]
+        # 当s<0时，i缺省时，默认为-1. j缺省时，默认为-len(a)-1
+        # fixme 所以a[::-1]相当于 a[-1:-len(a)-1:-1]，
+        # fixme 也就是从最后一个元素到第一个元素复制一遍。所以你看到一个倒序的东东。
+
+        # 这一个步骤 相当于累加目标词两边的词向量
+        for i in range(gram_word_list.__len__())[::-1]:
+            item = gram_word_list[i]
+            if self.word_dictionary.__contains__(item):
+                gram_vector_sum += self.word_dictionary[item]['huffman_vector']
+            else:
+                gram_word_list.pop(i)
+
+        if gram_word_list.__len__() == 0:
+            return
+        e = self.__GoAlong_Huffman(huffman_code, gram_vector_sum, self.huffman_tree.root)
+        # 词向量更新
+        for item in gram_word_list:
+            # 词向量更新
+            self.word_dictionary[item]['huffman_vector'] += e
+            self.word_dictionary[item]['huffman_vector'] = preprocessing.normalize(
+                self.word_dictionary[item]['huffman_vector'])
+
+    # 进行沿着哈夫曼树
+    def __GoAlong_Huffman(self, huffman_code, input_vector, root):
+
+        node = root
+        e = np.zeros([1, self.vector_length])
+        # 假如哈夫曼编码是 1001 也就是 '左右右左'。
+        for level in range(huffman_code.__len__()):
+            huffman_charat = huffman_code[level]
+            # 判别正类和负类的方法是使用sigmoid函数
+            q = self.__Sigmoid(input_vector.dot(node.huffman_vector.T))
+            # 梯度公式 ∂L∂xw=∑j=2lw(1−dwj−σ(xTwθwj−1))θwj−1
+            grad = self.learn_rate * (1 - int(huffman_charat) - q)
+            # e是输出向量 是将目标单词分类的向量
+            e += grad * node.huffman_vector
+            # 更新node的内部哈夫曼向量
+            node.huffman_vector += grad * input_vector
+            # norm：可以为l1、l2或max，默认为l2
+            #
+            # 若为l1时，样本各个特征值除以各个特征值的绝对值之和
+            #
+            # 若为l2时，样本各个特征值除以各个特征值的平方之和
+            # In [8]: from sklearn import preprocessing
+            #    ...: X = [[ 1., -1., 2.],
+            #              [ 2., 0., 0.],
+            #              [ 0., 1., -1.]]
+            #    ...: normalizer = preprocessing.Normalizer().fit(X)#fit does nothing
+            #    ...: normalizer
+            #    ...:
+            # Out[8]: Normalizer(copy=True, norm='l2')
+            #
+            # In [9]: normalizer.transform(X)
+            # Out[9]:
+            # array([[ 0.40824829, -0.40824829,  0.81649658],
+            #        [ 1.        ,  0.        ,  0.        ],
+            #        [ 0.        ,  0.70710678, -0.70710678]])
+            node.huffman_vector = preprocessing.normalize(node.huffman_vector)
+            if huffman_charat == '0':
+                node = node.right
+            else:
+                node = node.left
+        return e
+
+    def __Sigmoid(self, value):
+        return 1 / (1 + np.math.exp(-value))
+
+    # 产生单词的字典 这个字典包含 词频、词值、哈夫曼编码、节点θ等信息
+    def generate_word_dictionary(self, word_frequent):
+
+        # 如果word_frequent既不是字典也不是顺序表 那么就报错。word_frequent要么是字典要么是顺序表
+        if not isinstance(word_frequent, dict) and not isinstance(word_frequent, list):
+            raise ValueError('the word freq info should be a dict or list')
+        # 字典对象
+        word_dictionary = {}
+        if isinstance(word_frequent, dict):
+            sum_count = sum(word_frequent.values())
+            for word in word_frequent:
+                temp_dict = dict(
+                    word=word,
+                    freq=word_frequent[word],
+                    possibility=word_frequent[word] / sum_count,
+                    huffman_vector=np.random.random([1, self.vector_length]),
+                    huffman_code=None
+                )
+                word_dictionary[word] = temp_dict
+        else:
+            # 如果word_frequent是顺序表的结构
+            freq_list = [x[1] for x in word_frequent]
+            sum_count = sum(freq_list)
+
+            for item in word_frequent:
+                temp_dict = dict(
+                    word=item[0],
+                    freq=item[1],
+                    possibility=item[1] / sum_count,
+                    huffman_vector=np.random.random([1, self.vector_length]),
+                    huffman_code=None
+                )
+                word_dictionary[item[0]] = temp_dict
+        self.word_dictionary = word_frequent
 
 
+# 定义哈夫曼节点对象
 class huffman_node():
     def __init__(self,
                  # 当前叶子节点，保存的单词的值，比如说单词'this'
@@ -50,7 +210,7 @@ class huffman_node():
         # 定义是否是叶子节点
         self.is_leaf = is_leaf,
         # 定义哈夫曼节点对象中的哈夫曼编码
-        self.huffman_code = None,
+        self.huffman_code = '',
         self.value = value
         self.huffman_possibility = huffman_possibility,
 
@@ -97,8 +257,7 @@ def merge(node_list, first, mid, end):
 class huffman_tree():
     def __init__(self,
                  # 定义哈夫曼树
-                 # 首先有个根节点
-                 root,
+
                  # 然后有一个保存叶子节点的字典表
                  word_dictionary,
                  vector_length=15000,
@@ -106,6 +265,8 @@ class huffman_tree():
                  word_length=None,
 
                  ):
+
+        self.root = None
 
         # 下面有几个值是需要在传入初始化变量进行计算的
         # 首先是根据传入的字典表 构造成一个字典顺序表
@@ -169,21 +330,23 @@ class huffman_tree():
             # 如果当前的点不是叶子节点
             # 根节点
             while root.is_leaf is False:
-                code = root.huffman
+                # TODO 这里用到的就是 哈夫曼编码
+                code = root.huffman_code
                 # 如果是最上面的根节点 那么它的huffman是code
                 left_node = root.left
                 # 左边是 1 右边是 0
-                if (left_node != None):
+                if left_node != None:
                     left_code = code + '1'
-                    left_node.huffman = left_code
-                    word_dictionary[left_node.value]['huffman'] = left_code
+                    left_node.huffman_code = left_code
+                    # TODO 在上面 temp_dict中
+                    word_dictionary[left_node.value]['huffman_code'] = left_code
                     # 然后再判定一下 如果左 或者 右 是叶子 那么久赋值
                     self.generate_huffman_code(left_node)
                 right_node = root.right
-                if (right_node != None):
+                if right_node != None:
                     right_code = code + '0'
-                    right_node.huffman = right_code
-                    word_dictionary[right_node.value]['huffman'] = right_code
+                    right_node.huffman_code = right_code
+                    word_dictionary[right_node.value]['huffman_code'] = right_code
                     self.generate_huffman_code(right_node)
 
     # 构造出当前这一对叶子节点与根节点的数对
@@ -204,6 +367,17 @@ class huffman_tree():
 
 # 词频统计类 主要功能有 切分词、统计词频
 class word_count():
+    # can calculate the freq of words in a text list
+
+    # for example
+    # >>> data = ['Merge multiple sorted inputs into a single sorted output',
+    #           'The API below differs from textbook heap algorithms in two aspects']
+    # >>> wc = WordCounter(data)
+    # >>> print(wc.count_res)
+
+    # >>> MulCounter({' ': 18, 'sorted': 2, 'single': 1, 'below': 1, 'inputs': 1, 'The': 1, 'into': 1, 'textbook': 1,
+    #                'API': 1, 'algorithms': 1, 'in': 1, 'output': 1, 'heap': 1, 'differs': 1, 'two': 1, 'from': 1,
+    #                'aspects': 1, 'multiple': 1, 'a': 1, 'Merge': 1})
 
     def __init__(self, text_list):
         self.text_list = text_list
@@ -216,8 +390,9 @@ class word_count():
     def stop_word(self):
         stop_words = file_interface.load_pickle('./static/stop_words.pkl')
         return stop_words
+
     # 单词切分 去掉停用词
-    def word_count(self,text_list,cut_all=False):
+    def word_count(self, text_list, cut_all=False):
         # 过滤后的单词顺序表
         filtered_word_list = []
         count = 0
@@ -237,9 +412,10 @@ class word_count():
             except:
                 pass
 
+
 # 进行词频统计的类
 class mul_counter(Counter):
-    def __init__(self,element_list):
+    def __init__(self, element_list):
         super().__init__(element_list)
 
         def larger_than(self, minvalue, ret='list'):
@@ -287,4 +463,3 @@ class mul_counter(Counter):
                 return ret_data
             else:
                 return temp[:high]
-
