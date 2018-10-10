@@ -32,7 +32,7 @@ class word2vector():
                 word_counts = word_count(text_list)
                 self.cut_text_list = word_counts.text_list
                 # 构造字典
-                self.generate_word_dictionary(word_counts.count_result.larger_than(1))
+                self.generate_word_dictionary(word_counts.count_result.larger_than(2))
             # 产生一个全量的哈夫曼树
             self.huffman_tree = huffman_tree(self.word_dictionary, vector_length=self.vector_length)
         # 以上，最重要的数据环节 哈夫曼树、单词词频已经产生好了，接下来进行训练
@@ -465,7 +465,22 @@ if __name__ == '__main__':
     # text =[ x['dealed_text']['left_content'][0] for x in text]
 
     data = [
-        'Cristiano Ronaldo dos Santos Aveiro (Cristiano Ronaldo dos Santos Aveiro), born on February 5, 1985 in Funchal, Madeira, Portugal, is a professional football player in Portugal. The winger and center play for Juventus Football Club of Italy and are the captain of the Portuguese national men soccer team.Cristiano Ronaldo debuted at Sporting Lisbon. In 2003, he joined the Premier League Manchester United. He won 10 championships in the English Premier League, the UEFA Champions League and the World Club Cup. In June 2009, he was transferred to Real Madrid with a price of 96 million euros. He won 16 championships in the UEFA Champions League, 2 La Liga titles and 3 World Cup Cup championships. Cristiano Ronaldo played for Real Madrid in 9 years, contributing 450 goals and 131 assists in 438 games, and became the player with the highest scoring rate in Real Madrid history with a scoring rate of 1.03 goals per game.Cristiano Ronaldo maintains a number of personal records, including the total scores of individual scores in the five major leagues in Europe, the total score of the Real Madrid club individual goals, the total score of the Champions League individual goals, and the total scores of the European national team individual goals. Cristiano Ronaldo has won the Golden Globe Award five times, three times to win the World Footballer, four times to win the European Golden Boot Award, and seven times to win the Champions League top scorer and other personal honors.In July 2016, C Ronaldo led Portugal to the 2016 European Cup in France, the first international competition in the history of the Portuguese national team. On July 10, 2018, the transfer to Serie A Juventus. On July 24, 2018, Cristiano Ronaldo was selected as the candidate for the 2018 FIFA World Footballer. In September 2018, he was selected as the FIFA Team of the Year.']
+        'Cristiano Ronaldo dos Santos Aveiro (Cristiano Ronaldo dos Santos Aveiro), born on February 5, 1985 in Funchal, Madeira, Portugal, is a professional football player in Portugal. The winger and center play for Juventus Football Club of Italy and are the captain of the Portuguese '
+        'national men soccer team.Cristiano Ronaldo debuted at Sporting Lisbon. In 2003, he joined the Premier League Manchester United. He won 10 championships in the English Premier League, the UEFA Champions League and the World Club Cup. In June 2009, he was transferred to Real Madrid '
+        'with a price of 96 million euros. He won 16 championships in the UEFA Champions League, 2 La Liga titles and 3 World Cup Cup championships. Cristiano Ronaldo played for Real Madrid in 9 years, contributing 450 goals and 131 assists in 438 games, and became the player with the highest'
+        ' scoring rate in Real Madrid history with a scoring rate of 1.03 goals per game.Cristiano Ronaldo maintains a number of personal records, including the total scores of individual scores in the five major leagues in Europe, the total score of the Real Madrid club individual goals, '
+        'the total score of the Champions League individual goals, and the total scores of the European national team individual goals. Cristiano Ronaldo has won the Golden Globe Award five times, three times to win the World Footballer, four times to win the European Golden Boot Award,'
+        ' and seven times to win the Champions League top scorer and other personal honors.In July 2016, C Ronaldo led Portugal to the 2016 European Cup in France, the first international competition in the history of the Portuguese national team. On July 10, 2018, the transfer to Serie'
+        ' A Juventus. On July 24, 2018, Cristiano Ronaldo was selected as the candidate for the 2018 FIFA World Footballer. In September 2018, he was selected as the FIFA Team of the Year.']
+
+    f = open("./static/cristiano_ronaldo.text")  # 返回一个文件对象
+    line = f.readline()  # 调用文件的 readline()方法
+    while line:
+        line = f.readline()
+        data.append(line)
+    f.close()
+
+    # data = file_interface.load_pickle('./static/cristiano_ronaldo.text')
     word2vec = word2vector(vector_length=500)
     word2vec.train_model(data)
     file_interface.save_pickle(word2vec.word_dictionary, './static/word2vector.pkl')
@@ -489,7 +504,7 @@ if __name__ == '__main__':
     keys = list(x.keys())
     for key in keys:
         every = huffman_node(
-            key,cal_simi(x, 'United', key))
+            key,cal_simi(x, 'Ronaldo', key))
         possibility_list.append(every)
 
     possibility_list.sort(key=lambda x: x.huffman_possibility, reverse=True)
