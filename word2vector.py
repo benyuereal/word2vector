@@ -473,7 +473,7 @@ if __name__ == '__main__':
         ' and seven times to win the Champions League top scorer and other personal honors.In July 2016, C Ronaldo led Portugal to the 2016 European Cup in France, the first international competition in the history of the Portuguese national team. On July 10, 2018, the transfer to Serie'
         ' A Juventus. On July 24, 2018, Cristiano Ronaldo was selected as the candidate for the 2018 FIFA World Footballer. In September 2018, he was selected as the FIFA Team of the Year.']
 
-    f = open("./static/cristiano_ronaldo.text")  # 返回一个文件对象
+    f = open("./static/real_madrid.text")  # 返回一个文件对象
     line = f.readline()  # 调用文件的 readline()方法
     while line:
         line = f.readline()
@@ -504,7 +504,7 @@ if __name__ == '__main__':
     keys = list(x.keys())
     for key in keys:
         every = huffman_node(
-            key,cal_simi(x, 'Ronaldo', key))
+            key,cal_simi(x, 'Zidane', key))
         possibility_list.append(every)
 
     possibility_list.sort(key=lambda x: x.huffman_possibility, reverse=True)
